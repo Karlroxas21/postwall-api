@@ -1,0 +1,6 @@
+@Entrypoint_HostAddress = http://localhost:5273
+
+GET {{Entrypoint_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
