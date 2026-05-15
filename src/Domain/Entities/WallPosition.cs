@@ -8,6 +8,6 @@ public class WallPosition
     public double Y { get; private set; }
     public double Width { get; private set; }
     public double Height { get; private set; }
-    public Note Note {get; private set;} = null!;
+    public Note Note { get; private set; } = null!;
 
 }

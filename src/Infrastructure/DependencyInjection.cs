@@ -13,7 +13,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<PostWallDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("Default")));
-        
+
         services.AddScoped<INoteRepository, NoteRepository>();
 
         return services;
