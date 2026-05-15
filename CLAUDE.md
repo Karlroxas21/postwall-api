@@ -29,17 +29,30 @@ OpenAPI endpoint in Development: `http://localhost:5273/openapi/v1.json`
 
 ## Architecture
 
-Clean/layered architecture with four projects targeting **net10.0**:
+Hexagonal Architecture (Ports & Adapters) with four projects targeting **net10.0**:
 
 ```
 src/
-  Domain/        — entities, value objects, domain logic (no external deps)
-  Service/       — application/use-case layer (depends on Domain)
-  Infrastructure/ — DB, external services, repo implementations (depends on Domain + Service)
-  Entrypoint/    — ASP.NET Core host, DI wiring, HTTP pipeline (depends on all)
+  Domain/                    — core hexagon: entities, value objects, domain services, output port interfaces
+    Entities/                — aggregate roots and domain entities
+    ValueObjects/            — immutable value types
+    Services/                — domain services
+    Ports/                   — output port interfaces (e.g. IRepository contracts)
+
+  Service/                   — application layer: orchestrates use cases via ports
+    UseCases/                — use case implementations
+    Ports/                   — input port interfaces (use case contracts)
+
+  Infrastructure/            — driven/secondary adapters: implement Domain output ports
+    Persistence/             — EF Core DbContext and repository implementations
+    Adapters/                — other driven adapters (external APIs, messaging, etc.)
+
+  Entrypoint/                — driving/primary adapters + composition root
+    Controllers/             — HTTP adapters (ASP.NET Core controllers)
+    Middlewares/             — HTTP pipeline middleware
 ```
 
-Dependency rule: outer layers depend inward; Domain has zero project references.
+Dependency rule: Domain has zero project references. Service depends on Domain only. Infrastructure implements Domain ports. Entrypoint wires everything via DI.
 
 `Entrypoint/Program.cs` is the composition root — wire DI registrations and middleware here. `appsettings.Development.json` overrides `appsettings.json` in dev.
 
