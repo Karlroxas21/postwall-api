@@ -33,7 +33,7 @@ public class Note : Base
         return Note;
     }
 
-    public void Update(string title, string content, string color, bool isPinned, bool isArchived, DateOnly? dueDate, Guid? folderId)
+    public void Update(string title, string content, string color, bool isPinned, bool isArchived, DateOnly? dueDate, Guid? folderId, DateTime updatedAt)
     {
         Title = title;
         Content = content;
@@ -42,5 +42,8 @@ public class Note : Base
         IsArchived = isArchived;
         DueDate = dueDate;
         FolderId = folderId;
+        UpdatedAt = updatedAt;
     }
+
+    public void SoftDelete() => DeletedAt = DateTime.UtcNow;
 }

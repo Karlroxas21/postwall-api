@@ -94,7 +94,8 @@ public class NoteService : INoteService
           request.IsPinned,
           request.IsArchived,
           request.DueDate,
-          request.FolderId
+          request.FolderId,
+          DateTime.UtcNow
       );
 
         await _noteRepository.UpdateAsync(existingNote, ct);

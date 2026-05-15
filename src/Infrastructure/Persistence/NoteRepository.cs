@@ -19,13 +19,18 @@ public class NoteRepository : INoteRepository
 
     public async Task DeleteAsync(Guid Id, CancellationToken ct = default)
     {
-        await _db.Notes.Where(n => n.Id == Id).ExecuteDeleteAsync(ct);
+        var note = await _db.Notes.FirstOrDefaultAsync(n => n.Id == Id && n.DeletedAt == null, ct)
+            ?? throw new NotFoundException($"Note {Id} not found");
+
+        note.SoftDelete();
+        await _db.SaveChangesAsync(ct);
     }
 
     public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, CancellationToken ct = default)
     {
-        var Total = await _db.Notes.CountAsync(ct);
-        var Items = await _db.Notes.OrderByDescending(n => n.CreatedAt)
+        var query = _db.Notes.Where(n => n.DeletedAt == null);
+        var Total = await query.CountAsync(ct);
+        var Items = await query.OrderByDescending(n => n.CreatedAt)
             .Skip((Page - 1) * PageSize)
             .Take(PageSize)
             .ToListAsync(ct);
@@ -35,7 +40,7 @@ public class NoteRepository : INoteRepository
 
     public async Task<Note?> GetByIdAsync(Guid Id, CancellationToken ct = default)
     {
-        return await _db.Notes.FindAsync([Id], ct);
+        return await _db.Notes.FirstOrDefaultAsync(n => n.Id == Id && n.DeletedAt == null, ct);
     }
 
     public async Task UpdateAsync(Note Note, CancellationToken ct = default)
