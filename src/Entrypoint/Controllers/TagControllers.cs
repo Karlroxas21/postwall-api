@@ -56,7 +56,7 @@ public class TagController : ControllerBase
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await _tagService.DeleteAsync(id, ct);
-        
+
         return NoContent();
     }
 

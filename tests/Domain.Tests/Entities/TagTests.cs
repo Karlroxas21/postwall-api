@@ -43,7 +43,7 @@ public class TagTests
         var tag = Tag.Create("2026", NotePalette.Peach.Bg);
 
         tag.DeletedAt.Should().BeNull();
-        
+
         tag.SoftDelete();
 
         tag.DeletedAt.Should().NotBeNull();
