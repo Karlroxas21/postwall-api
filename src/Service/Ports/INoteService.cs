@@ -11,4 +11,6 @@ public interface INoteService
     Task<NoteResponse?> GetByIdAsync(Guid Id, CancellationToken ct);
     Task<NoteResponse> UpdateAsync(Guid Id, UpdateNoteRequest Request, CancellationToken ct);
     Task AttachTagAsync(Guid noteId, Guid tagId, CancellationToken ct);
+    Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct);
+
 }

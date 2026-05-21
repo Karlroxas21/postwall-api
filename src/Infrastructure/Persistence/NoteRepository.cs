@@ -77,4 +77,21 @@ public class NoteRepository : INoteRepository
         await _db.NoteTags.AddAsync(NoteTag.Create(noteId, tagId), ct);
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct = default)
+    {
+        var noteExists = await _db.Notes.AnyAsync(n => n.Id == noteId && n.DeletedAt == null, ct);
+        if (!noteExists)
+        {
+            throw new NotFoundException($"Note {noteId} not found");
+        }
+
+        var tagExists = await _db.Tags.AnyAsync(t => t.Id == tagId && t.DeletedAt == null, ct);
+        if (!tagExists)
+        {
+            throw new NotFoundException($"Tag {tagId} not found");
+        }
+
+        await _db.NoteTags.Where(nt => nt.NoteId == noteId && nt.TagId == tagId).ExecuteDeleteAsync();
+    }
 }

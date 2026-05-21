@@ -63,4 +63,12 @@ public class NoteController : ControllerBase
 
         return Created($"/v1/api/notes/{noteId}/tags/{tagId}", null);
     }
+
+    [HttpDelete("{noteId:guid}/tags/{tagId:guid}")]
+    public async Task<IActionResult> DetachTag(Guid noteId, Guid tagId, CancellationToken ct)
+    {
+        await _noteService.DetachTagAsync(noteId, tagId, ct);
+
+        return NoContent();
+    }
 }

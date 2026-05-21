@@ -86,6 +86,10 @@ public class NoteService : INoteService
         await _noteRepository.AttachTagAsync(noteId, tagId, ct);
     }
 
+    public async Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct)
+    {
+        await _noteRepository.DetachTagAsync(noteId, tagId, ct);
+    }
     private static NoteResponse ToNoteResponse(Note note)
     {
         return new NoteResponse(
