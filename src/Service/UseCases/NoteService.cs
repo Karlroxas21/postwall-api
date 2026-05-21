@@ -99,6 +99,10 @@ public class NoteService : INoteService
             note.Color,
             note.IsPinned,
             note.IsArchived,
+            note.NoteTags
+                .Where(nt => nt.Tag is not null && nt.Tag.DeletedAt == null)
+                .Select(nt => new NoteTagSummary(nt.TagId, nt.Tag.Name, nt.Tag.Color))
+                .ToList(),
             note.DueDate,
             note.FolderId,
             note.CreatedAt,

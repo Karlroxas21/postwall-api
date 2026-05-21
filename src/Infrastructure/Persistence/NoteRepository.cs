@@ -33,6 +33,10 @@ public class NoteRepository : INoteRepository
         var Items = await query.OrderByDescending(n => n.CreatedAt)
             .Skip((Page - 1) * PageSize)
             .Take(PageSize)
+            .Include(n => n.NoteTags)
+            .ThenInclude(nt => nt.Tag)
+            .AsNoTracking()
+            .AsSplitQuery()
             .ToListAsync(ct);
 
         return new PagedResult<Note>(Items, Page, PageSize, Total);
@@ -40,7 +44,11 @@ public class NoteRepository : INoteRepository
 
     public async Task<Note?> GetByIdAsync(Guid Id, CancellationToken ct = default)
     {
-        return await _db.Notes.FirstOrDefaultAsync(n => n.Id == Id && n.DeletedAt == null, ct);
+        return await _db.Notes
+            .Include(n => n.NoteTags)
+                .ThenInclude(nt => nt.Tag)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(n => n.Id == Id && n.DeletedAt == null, ct);
     }
 
     public async Task UpdateAsync(Note Note, CancellationToken ct = default)

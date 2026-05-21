@@ -7,6 +7,7 @@ public record NoteResponse(
     string Color,
     bool IsPinned,
     bool IsArchived,
+    IReadOnlyList<NoteTagSummary> Tags,
     DateOnly? DueDate,
     Guid? FolderId,
     DateTime CreatedAt,
