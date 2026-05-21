@@ -2,7 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Ports;
 using Domain.ValueObjects;
-using Service.Dtos;
+using Service.Dtos.Notes;
 using Service.Ports;
 
 namespace Service.UseCases;

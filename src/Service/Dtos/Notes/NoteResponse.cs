@@ -1,4 +1,4 @@
-namespace Service.Dtos;
+namespace Service.Dtos.Notes;
 
 public record NoteResponse(
     Guid Id,

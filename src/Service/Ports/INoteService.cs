@@ -1,6 +1,5 @@
-using Domain.Entities;
 using Domain.ValueObjects;
-using Service.Dtos;
+using Service.Dtos.Notes;
 
 namespace Service.Ports;
 

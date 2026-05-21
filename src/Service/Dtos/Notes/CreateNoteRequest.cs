@@ -1,6 +1,6 @@
-namespace Service.Dtos;
+namespace Service.Dtos.Notes;
 
-public record UpdateNoteRequest(
+public record CreateNoteRequest(
     string Title,
     string Content,
     string? Color,

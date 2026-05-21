@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Service.Dtos;
+using Service.Dtos.Notes;
 using Service.Ports;
 
 namespace Entrypoint.Controllers;
