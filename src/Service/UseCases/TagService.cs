@@ -73,6 +73,7 @@ public class TagService : ITagService
             tag.Id,
             tag.Name,
             tag.Color,
+            tag.NoteTags,
             tag.CreatedAt,
             tag.UpdatedAt
         );

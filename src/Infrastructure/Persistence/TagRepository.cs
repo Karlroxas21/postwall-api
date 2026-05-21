@@ -6,21 +6,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
-public class TagRepository : ITagRepository
+public class TagRepository(PostWallDbContext db) : ITagRepository
 {
-    private readonly PostWallDbContext _db;
-
-    public TagRepository(PostWallDbContext db) => _db = db;
+    private readonly PostWallDbContext _db = db;
 
     public async Task AddAsync(Tag Tag, CancellationToken ct = default)
     {
-        var existing = await _db.Tags.FindAsync([Tag.Name], ct);
+        var exists = await _db.Tags
+            .AnyAsync(t => t.DeletedAt == null && t.Name == Tag.Name, ct);
 
-        if (existing is not null)
+        if (exists)
         {
             throw new ConflictException($"Tag {Tag.Name} already exists");
         }
-        
+
         await _db.Tags.AddAsync(Tag, ct);
         await _db.SaveChangesAsync(ct);
     }
@@ -62,6 +61,14 @@ public class TagRepository : ITagRepository
     {
         var existing = await _db.Tags.FindAsync([Tag.Id], ct)
             ?? throw new NotFoundException($"Tag {Tag.Id} not found");
+
+        var nameTaken = await _db.Tags
+            .AnyAsync(t => t.Id != Tag.Id && t.DeletedAt == null && t.Name == Tag.Name, ct);
+
+        if (nameTaken)
+        {
+            throw new ConflictException($"Tag {Tag.Name} already exists");
+        }
 
         _db.Entry(existing).CurrentValues.SetValues(Tag);
 
