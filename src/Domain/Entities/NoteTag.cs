@@ -8,4 +8,14 @@ public class NoteTag
     public Note Note { get; private set; } = null!;
     public Tag Tag { get; private set; } = null!;
 
+    public static NoteTag Create(Guid noteId, Guid tagId)
+    {
+        var NoteTag = new NoteTag();
+
+        NoteTag.NoteId = noteId;
+        NoteTag.TagId = tagId;
+
+        return NoteTag;
+    }
+
 }

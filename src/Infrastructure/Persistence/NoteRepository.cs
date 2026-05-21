@@ -13,7 +13,7 @@ public class NoteRepository : INoteRepository
     public NoteRepository(PostWallDbContext db) => _db = db;
     public async Task AddAsync(Note Note, CancellationToken ct = default)
     {
-        await _db.Notes.AddAsync(Note);
+        await _db.Notes.AddAsync(Note, ct);
         await _db.SaveChangesAsync(ct);
     }
 
@@ -50,6 +50,31 @@ public class NoteRepository : INoteRepository
 
         _db.Entry(existing).CurrentValues.SetValues(Note);
 
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task AttachTagAsync(Guid noteId, Guid tagId, CancellationToken ct = default)
+    {
+        var noteExists = await _db.Notes.AnyAsync(n => n.Id == noteId && n.DeletedAt == null, ct);
+        if (!noteExists)
+        {
+            throw new NotFoundException($"Note {noteId} not found");
+        }
+
+        var tagExists = await _db.Tags.AnyAsync(t => t.Id == tagId && t.DeletedAt == null, ct);
+        if (!tagExists)
+        {
+            throw new NotFoundException($"Tag {tagId} not found");
+        }
+
+        var linked = await _db.Set<NoteTag>()
+            .AnyAsync(nt => nt.NoteId == noteId && nt.TagId == tagId, ct);
+        if (linked)
+        {
+            throw new ConflictException($"Tag {tagId} already attached to note {noteId}");
+        }
+
+        await _db.NoteTags.AddAsync(NoteTag.Create(noteId, tagId), ct);
         await _db.SaveChangesAsync(ct);
     }
 }

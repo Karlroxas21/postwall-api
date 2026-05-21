@@ -27,7 +27,7 @@ public class NoteController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = "GetNoteById")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var note = await _noteService.GetByIdAsync(id, ct);
@@ -39,7 +39,7 @@ public class NoteController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateNoteRequest request, CancellationToken ct)
     {
         var created = await _noteService.CreateAsync(request, ct);
-        return StatusCode(201, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:guid}")]
@@ -54,5 +54,13 @@ public class NoteController : ControllerBase
     {
         await _noteService.DeleteAsync(id, ct);
         return NoContent();
+    }
+
+    [HttpPost("{noteId:guid}/tags/{tagId:guid}")]
+    public async Task<IActionResult> AttachTag(Guid noteId, Guid tagId, CancellationToken ct)
+    {
+        await _noteService.AttachTagAsync(noteId, tagId, ct);
+
+        return Created($"/v1/api/notes/{noteId}/tags/{tagId}", null);
     }
 }

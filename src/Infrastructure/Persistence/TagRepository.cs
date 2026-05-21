@@ -48,7 +48,7 @@ public class TagRepository(PostWallDbContext db) : ITagRepository
                 t.NoteTags.Count(nt => nt.Note.DeletedAt == null)
             )).ToListAsync(ct);
 
-        return new PagedResult<TagWithNoteCount>(Items, Total, Page, PageSize);
+        return new PagedResult<TagWithNoteCount>(Items, Page, Total, PageSize);
     }
 
     public async Task<Tag?> GetByIdAsync(Guid Id, CancellationToken ct = default)

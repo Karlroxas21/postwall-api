@@ -24,7 +24,7 @@ public class Note : Base
 
         Note.Title = title;
         Note.Content = content;
-        Note.Color = color;
+        Note.Color = color ?? NotePalette.Butter.Bg;
         Note.IsPinned = isPinned;
         Note.IsArchived = isArchived;
         Note.DueDate = dueDate;
@@ -37,7 +37,7 @@ public class Note : Base
     {
         Title = title;
         Content = content;
-        Color = color;
+        Color = color ?? NotePalette.Butter.Bg;
         IsPinned = isPinned;
         IsArchived = isArchived;
         DueDate = dueDate;
