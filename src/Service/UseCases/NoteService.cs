@@ -2,7 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Ports;
 using Domain.ValueObjects;
-using Service.Dtos;
+using Service.Dtos.Notes;
 using Service.Ports;
 
 namespace Service.UseCases;
@@ -13,12 +13,12 @@ public class NoteService : INoteService
 
     public NoteService(INoteRepository noteRepository) => _noteRepository = noteRepository;
 
-    public async Task<CreateNoteRequest> CreateAsync(CreateNoteRequest request, CancellationToken ct)
+    public async Task<NoteResponse> CreateAsync(CreateNoteRequest request, CancellationToken ct)
     {
         var note = Note.Create(
             request.Title,
             request.Content,
-            request.Color ?? NotePalette.Butter.Bg,
+            request.Color,
             request.IsPinned,
             request.IsArchived,
             request.DueDate,
@@ -27,7 +27,17 @@ public class NoteService : INoteService
 
         await _noteRepository.AddAsync(note, ct);
 
-        return request;
+        if (request.TagIds is not null)
+        {
+            foreach (var tagId in request.TagIds.Distinct())
+            {
+                await _noteRepository.AttachTagAsync(note.Id, tagId, ct);
+            }
+
+            note = await _noteRepository.GetByIdAsync(note.Id, ct) ?? note;
+        }
+
+        return ToNoteResponse(note);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct)
@@ -39,18 +49,7 @@ public class NoteService : INoteService
     {
         var pageRes = await _noteRepository.GetAllAsync(page, pageSize, ct);
 
-        var items = pageRes.Items.Select(n => new NoteResponse(
-            n.Id,
-            n.Title,
-            n.Content,
-            n.Color,
-            n.IsPinned,
-            n.IsArchived,
-            n.DueDate,
-            n.FolderId,
-            n.CreatedAt,
-            n.UpdatedAt
-        )).ToList();
+        var items = pageRes.Items.Select(n => ToNoteResponse(n)).ToList();
 
         return new PagedResult<NoteResponse>(items, pageRes.Page, pageRes.PageSize, pageRes.TotalCount);
     }
@@ -64,18 +63,7 @@ public class NoteService : INoteService
             throw new NotFoundException($"Note {id} not found");
         }
 
-        return new NoteResponse(
-            note.Id,
-            note.Title,
-            note.Content,
-            note.Color,
-            note.IsPinned,
-            note.IsArchived,
-            note.DueDate,
-            note.FolderId,
-            note.CreatedAt,
-            note.UpdatedAt
-        );
+        return ToNoteResponse(note);
     }
 
     public async Task<NoteResponse> UpdateAsync(Guid id, UpdateNoteRequest request, CancellationToken ct)
@@ -90,7 +78,7 @@ public class NoteService : INoteService
         existingNote.Update(
           request.Title,
           request.Content,
-          request.Color ?? NotePalette.Butter.Bg,
+          request.Color,
           request.IsPinned,
           request.IsArchived,
           request.DueDate,
@@ -100,10 +88,19 @@ public class NoteService : INoteService
 
         await _noteRepository.UpdateAsync(existingNote, ct);
 
-        return ToNoteReponse(existingNote);
+        return ToNoteResponse(existingNote);
     }
 
-    private static NoteResponse ToNoteReponse(Note note)
+    public async Task AttachTagAsync(Guid noteId, Guid tagId, CancellationToken ct)
+    {
+        await _noteRepository.AttachTagAsync(noteId, tagId, ct);
+    }
+
+    public async Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct)
+    {
+        await _noteRepository.DetachTagAsync(noteId, tagId, ct);
+    }
+    private static NoteResponse ToNoteResponse(Note note)
     {
         return new NoteResponse(
             note.Id,
@@ -112,6 +109,10 @@ public class NoteService : INoteService
             note.Color,
             note.IsPinned,
             note.IsArchived,
+            note.NoteTags
+                .Where(nt => nt.Tag is not null && nt.Tag.DeletedAt == null)
+                .Select(nt => new NoteTagSummary(nt.TagId, nt.Tag.Name, nt.Tag.Color))
+                .ToList(),
             note.DueDate,
             note.FolderId,
             note.CreatedAt,

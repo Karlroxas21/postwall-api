@@ -1,4 +1,4 @@
-namespace Service.Dtos;
+namespace Service.Dtos.Notes;
 
 public record NoteResponse(
     Guid Id,
@@ -7,6 +7,7 @@ public record NoteResponse(
     string Color,
     bool IsPinned,
     bool IsArchived,
+    IReadOnlyList<NoteTagSummary> Tags,
     DateOnly? DueDate,
     Guid? FolderId,
     DateTime CreatedAt,

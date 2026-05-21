@@ -15,6 +15,7 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("Default")));
 
         services.AddScoped<INoteRepository, NoteRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
 
         return services;
     }
