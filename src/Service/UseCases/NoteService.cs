@@ -27,6 +27,16 @@ public class NoteService : INoteService
 
         await _noteRepository.AddAsync(note, ct);
 
+        if (request.TagIds is not null)
+        {
+            foreach (var tagId in request.TagIds.Distinct())
+            {
+                await _noteRepository.AttachTagAsync(note.Id, tagId, ct);
+            }
+
+            note = await _noteRepository.GetByIdAsync(note.Id, ct) ?? note;
+        }
+
         return ToNoteResponse(note);
     }
 

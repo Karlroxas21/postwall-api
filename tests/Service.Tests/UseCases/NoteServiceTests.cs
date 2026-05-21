@@ -36,8 +36,59 @@ public class NoteServiceTests
 
         var result = await _sut.CreateAsync(request, default);
 
-        result.Should().BeSameAs(request);
+        result.Title.Should().Be(request.Title);
+        result.Content.Should().Be(request.Content);
+        result.Color.Should().Be(request.Color);
         _repo.Verify(r => r.AddAsync(It.IsAny<Note>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NullTagIds_DoesNotAttach()
+    {
+        var request = new CreateNoteRequest("t", "c", null, false, false, null, null, TagIds: null);
+
+        await _sut.CreateAsync(request, default);
+
+        _repo.Verify(
+            r => r.AttachTagAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAsync_EmptyTagIds_DoesNotAttach()
+    {
+        var request = new CreateNoteRequest("t", "c", null, false, false, null, null, TagIds: Array.Empty<Guid>());
+
+        await _sut.CreateAsync(request, default);
+
+        _repo.Verify(
+            r => r.AttachTagAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithTagIds_AttachesEachAndReloads()
+    {
+        var tagId1 = Guid.NewGuid();
+        var tagId2 = Guid.NewGuid();
+
+        Note? added = null;
+        _repo.Setup(r => r.AddAsync(It.IsAny<Note>(), default))
+            .Callback<Note, CancellationToken>((n, _) => added = n)
+            .Returns(Task.CompletedTask);
+
+        _repo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default))
+            .ReturnsAsync(() => added);
+
+        var request = new CreateNoteRequest(
+            "t", "c", null, false, false, null, null,
+            TagIds: new[] { tagId1, tagId2 });
+
+        await _sut.CreateAsync(request, default);
+
+        _repo.Verify(r => r.AttachTagAsync(It.IsAny<Guid>(), tagId1, default), Times.Once);
+        _repo.Verify(r => r.AttachTagAsync(It.IsAny<Guid>(), tagId2, default), Times.Once);
+        _repo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), default), Times.Once);
     }
 
     [Fact]
@@ -149,5 +200,29 @@ public class NoteServiceTests
         await _sut.DeleteAsync(id, default);
 
         _repo.Verify(r => r.DeleteAsync(id, default), Times.Once);
+    }
+
+    // ---------- AttachTagAsync / DetachTagAsync ----------
+
+    [Fact]
+    public async Task AttachTagAsync_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+        var tagId = Guid.NewGuid();
+
+        await _sut.AttachTagAsync(noteId, tagId, default);
+
+        _repo.Verify(r => r.AttachTagAsync(noteId, tagId, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DetachTagAsync_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+        var tagId = Guid.NewGuid();
+
+        await _sut.DetachTagAsync(noteId, tagId, default);
+
+        _repo.Verify(r => r.DetachTagAsync(noteId, tagId, default), Times.Once);
     }
 }
