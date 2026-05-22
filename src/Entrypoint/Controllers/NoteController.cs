@@ -19,10 +19,11 @@ public class NoteController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
+        [FromQuery] bool? pinned = null,
         CancellationToken ct = default
     )
     {
-        var result = await _noteService.GetAllAsync(page, pageSize, ct);
+        var result = await _noteService.GetAllAsync(page, pageSize, pinned, ct);
 
         return Ok(result);
     }
@@ -71,4 +72,21 @@ public class NoteController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{noteId:guid}/pin")]
+    public async Task<IActionResult> PinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.PinNote(noteId, ct);
+
+        return NoContent();
+    }
+
+    [HttpPut("{noteId:guid}/unpin")]
+    public async Task<IActionResult> UnpinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.UnpinNote(noteId, ct);
+
+        return NoContent();
+    }
+
 }

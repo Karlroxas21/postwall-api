@@ -26,9 +26,14 @@ public class NoteRepository : INoteRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, CancellationToken ct = default)
+    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, bool? Pinned, CancellationToken ct = default)
     {
         var query = _db.Notes.Where(n => n.DeletedAt == null);
+        if (Pinned.HasValue)
+        {
+            query = query.Where(n => n.IsPinned == Pinned.Value);
+        }
+
         var Total = await query.CountAsync(ct);
         var Items = await query.OrderByDescending(n => n.CreatedAt)
             .Skip((Page - 1) * PageSize)
@@ -101,5 +106,24 @@ public class NoteRepository : INoteRepository
         }
 
         await _db.NoteTags.Where(nt => nt.NoteId == noteId && nt.TagId == tagId).ExecuteDeleteAsync();
+    }
+
+    public async Task PinNoteAsync(Guid noteId, CancellationToken ct = default)
+    {
+        var note = await _db.Notes.FirstOrDefaultAsync(n => n.Id == noteId && n.DeletedAt == null, ct)
+            ?? throw new NotFoundException($"Note {noteId} not found");
+
+        note.PinNote();
+        await _db.SaveChangesAsync(ct);
+
+    }
+
+    public async Task UnpinNoteAsync(Guid noteId, CancellationToken ct = default)
+    {
+        var note = await _db.Notes.FirstOrDefaultAsync(n => n.Id == noteId && n.DeletedAt == null, ct)
+          ?? throw new NotFoundException($"Note {noteId} not found");
+
+        note.UnpinNote();
+        await _db.SaveChangesAsync(ct);
     }
 }

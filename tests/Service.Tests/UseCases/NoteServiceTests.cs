@@ -147,14 +147,51 @@ public class NoteServiceTests
         };
         var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 2);
 
-        _repo.Setup(r => r.GetAllAsync(1, 10, default)).ReturnsAsync(paged);
+        _repo.Setup(r => r.GetAllAsync(1, 10, null, default)).ReturnsAsync(paged);
 
-        var result = await _sut.GetAllAsync(1, 10, default);
+        var result = await _sut.GetAllAsync(1, 10, null, default);
 
         result.Items.Should().HaveCount(2);
         result.TotalCount.Should().Be(2);
         result.Items[0].Title.Should().Be("a");
         result.Items[1].IsPinned.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_PinnedTrue_PassesFilterToRepoAndReturnsOnlyPinned()
+    {
+        var notes = new List<Note>
+        {
+            Note.Create("pinned-1", "x", "#111", true, false, null, null),
+            Note.Create("pinned-2", "y", "#222", true, false, null, null),
+        };
+        var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 2);
+
+        _repo.Setup(r => r.GetAllAsync(1, 10, true, default)).ReturnsAsync(paged);
+
+        var result = await _sut.GetAllAsync(1, 10, true, default);
+
+        result.Items.Should().HaveCount(2);
+        result.Items.Should().OnlyContain(i => i.IsPinned);
+        _repo.Verify(r => r.GetAllAsync(1, 10, true, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_PinnedFalse_PassesFilterToRepoAndReturnsOnlyUnpinned()
+    {
+        var notes = new List<Note>
+        {
+            Note.Create("unpinned-1", "x", "#111", false, false, null, null),
+        };
+        var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 1);
+
+        _repo.Setup(r => r.GetAllAsync(1, 10, false, default)).ReturnsAsync(paged);
+
+        var result = await _sut.GetAllAsync(1, 10, false, default);
+
+        result.Items.Should().HaveCount(1);
+        result.Items.Should().OnlyContain(i => !i.IsPinned);
+        _repo.Verify(r => r.GetAllAsync(1, 10, false, default), Times.Once);
     }
 
     // ---------- UpdateAsync ----------
@@ -224,5 +261,27 @@ public class NoteServiceTests
         await _sut.DetachTagAsync(noteId, tagId, default);
 
         _repo.Verify(r => r.DetachTagAsync(noteId, tagId, default), Times.Once);
+    }
+
+    // ---------- PinNote / UnpinNote ----------
+
+    [Fact]
+    public async Task PinNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.PinNote(noteId, default);
+
+        _repo.Verify(r => r.PinNoteAsync(noteId, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UnpinNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.UnpinNote(noteId, default);
+
+        _repo.Verify(r => r.UnpinNoteAsync(noteId, default), Times.Once);
     }
 }

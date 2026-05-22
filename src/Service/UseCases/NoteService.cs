@@ -45,9 +45,9 @@ public class NoteService : INoteService
         await _noteRepository.DeleteAsync(id, ct);
     }
 
-    public async Task<PagedResult<NoteResponse>> GetAllAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<NoteResponse>> GetAllAsync(int page, int pageSize, bool? pinned, CancellationToken ct)
     {
-        var pageRes = await _noteRepository.GetAllAsync(page, pageSize, ct);
+        var pageRes = await _noteRepository.GetAllAsync(page, pageSize, pinned, ct);
 
         var items = pageRes.Items.Select(n => ToNoteResponse(n)).ToList();
 
@@ -99,6 +99,16 @@ public class NoteService : INoteService
     public async Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct)
     {
         await _noteRepository.DetachTagAsync(noteId, tagId, ct);
+    }
+
+    public async Task PinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteRepository.PinNoteAsync(noteId, ct);
+    }
+
+    public async Task UnpinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteRepository.UnpinNoteAsync(noteId, ct);
     }
     private static NoteResponse ToNoteResponse(Note note)
     {
