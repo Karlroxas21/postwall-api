@@ -59,4 +59,48 @@ public class NoteTests
         note.DeletedAt.Should().NotBeNull();
         note.DeletedAt!.Value.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
     }
+
+    [Fact]
+    public void PinNote_ShouldSetIsPinnedTrue()
+    {
+        var note = Note.Create("t", "c", NotePalette.Butter.Bg, false, false, null, null);
+
+        note.IsPinned.Should().BeFalse();
+
+        note.PinNote();
+
+        note.IsPinned.Should().BeTrue();
+    }
+
+    [Fact]
+    public void PinNote_WhenAlreadyPinned_RemainsPinned()
+    {
+        var note = Note.Create("t", "c", NotePalette.Butter.Bg, true, false, null, null);
+
+        note.PinNote();
+
+        note.IsPinned.Should().BeTrue();
+    }
+
+    [Fact]
+    public void UnpinNote_ShouldSetIsPinnedFalse()
+    {
+        var note = Note.Create("t", "c", NotePalette.Butter.Bg, true, false, null, null);
+
+        note.IsPinned.Should().BeTrue();
+
+        note.UnpinNote();
+
+        note.IsPinned.Should().BeFalse();
+    }
+
+    [Fact]
+    public void UnpinNote_WhenNotPinned_RemainsUnpinned()
+    {
+        var note = Note.Create("t", "c", NotePalette.Butter.Bg, false, false, null, null);
+
+        note.UnpinNote();
+
+        note.IsPinned.Should().BeFalse();
+    }
 }

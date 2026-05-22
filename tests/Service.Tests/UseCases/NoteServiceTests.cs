@@ -225,4 +225,26 @@ public class NoteServiceTests
 
         _repo.Verify(r => r.DetachTagAsync(noteId, tagId, default), Times.Once);
     }
+
+    // ---------- PinNote / UnpinNote ----------
+
+    [Fact]
+    public async Task PinNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.PinNote(noteId, default);
+
+        _repo.Verify(r => r.PinNoteAsync(noteId, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UnpinNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.UnpinNote(noteId, default);
+
+        _repo.Verify(r => r.UnpinNoteAsync(noteId, default), Times.Once);
+    }
 }

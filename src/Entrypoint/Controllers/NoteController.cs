@@ -71,4 +71,21 @@ public class NoteController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{noteId:guid}/pin")]
+    public async Task<IActionResult> PinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.PinNote(noteId, ct);
+
+        return NoContent();
+    }
+
+    [HttpPut("{noteId:guid}/unpin")]
+    public async Task<IActionResult> UnpinNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.UnpinNote(noteId, ct);
+
+        return NoContent();
+    }
+
 }

@@ -46,4 +46,13 @@ public class Note : Base
     }
 
     public void SoftDelete() => DeletedAt = DateTime.UtcNow;
+
+    public void PinNote()
+    {
+        IsPinned = true;
+    }
+    public void UnpinNote()
+    {
+        IsPinned = false;
+    }
 }

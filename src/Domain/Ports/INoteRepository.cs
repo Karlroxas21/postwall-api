@@ -12,5 +12,7 @@ public interface INoteRepository
     Task DeleteAsync(Guid Id, CancellationToken ct = default);
     Task AttachTagAsync(Guid noteId, Guid tagId, CancellationToken ct = default);
     Task DetachTagAsync(Guid noteId, Guid tagId, CancellationToken ct = default);
+    Task PinNoteAsync(Guid noteId, CancellationToken ct = default);
+    Task UnpinNoteAsync(Guid noteId, CancellationToken ct = default);
 
 }
