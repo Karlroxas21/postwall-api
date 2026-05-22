@@ -45,9 +45,9 @@ public class NoteService : INoteService
         await _noteRepository.DeleteAsync(id, ct);
     }
 
-    public async Task<PagedResult<NoteResponse>> GetAllAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<NoteResponse>> GetAllAsync(int page, int pageSize, bool? pinned, CancellationToken ct)
     {
-        var pageRes = await _noteRepository.GetAllAsync(page, pageSize, ct);
+        var pageRes = await _noteRepository.GetAllAsync(page, pageSize, pinned, ct);
 
         var items = pageRes.Items.Select(n => ToNoteResponse(n)).ToList();
 

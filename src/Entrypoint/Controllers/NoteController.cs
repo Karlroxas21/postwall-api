@@ -19,10 +19,11 @@ public class NoteController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
+        [FromQuery] bool? pinned = null,
         CancellationToken ct = default
     )
     {
-        var result = await _noteService.GetAllAsync(page, pageSize, ct);
+        var result = await _noteService.GetAllAsync(page, pageSize, pinned, ct);
 
         return Ok(result);
     }

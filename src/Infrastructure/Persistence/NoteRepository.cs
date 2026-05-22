@@ -26,9 +26,14 @@ public class NoteRepository : INoteRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, CancellationToken ct = default)
+    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, bool? Pinned, CancellationToken ct = default)
     {
         var query = _db.Notes.Where(n => n.DeletedAt == null);
+        if (Pinned.HasValue)
+        {
+            query = query.Where(n => n.IsPinned == Pinned.Value);
+        }
+
         var Total = await query.CountAsync(ct);
         var Items = await query.OrderByDescending(n => n.CreatedAt)
             .Skip((Page - 1) * PageSize)
@@ -110,7 +115,7 @@ public class NoteRepository : INoteRepository
 
         note.PinNote();
         await _db.SaveChangesAsync(ct);
-    
+
     }
 
     public async Task UnpinNoteAsync(Guid noteId, CancellationToken ct = default)
