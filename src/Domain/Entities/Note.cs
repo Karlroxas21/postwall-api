@@ -55,4 +55,12 @@ public class Note : Base
     {
         IsPinned = false;
     }
+    public void ArchiveNote()
+    {
+        IsArchived = true;
+    }
+    public void UnarchiveNote()
+    {
+        IsArchived = false;
+    }
 }

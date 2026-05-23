@@ -26,12 +26,21 @@ public class NoteRepository : INoteRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, bool? Pinned, CancellationToken ct = default)
+    public async Task<PagedResult<Note>> GetAllAsync(int Page, int PageSize, NoteQuery q, CancellationToken ct = default)
     {
         var query = _db.Notes.Where(n => n.DeletedAt == null);
-        if (Pinned.HasValue)
+        if (q.Pinned.HasValue)
         {
-            query = query.Where(n => n.IsPinned == Pinned.Value);
+            query = query.Where(n => n.IsPinned == q.Pinned.Value);
+        }
+
+        if (q.Archived == true)
+        {
+            query = query.Where(n => n.IsArchived);
+        }
+        else if (q.Archived == false)
+        {
+            query = query.Where(n => !n.IsArchived || n.IsPinned);
         }
 
         var Total = await query.CountAsync(ct);
@@ -124,6 +133,24 @@ public class NoteRepository : INoteRepository
           ?? throw new NotFoundException($"Note {noteId} not found");
 
         note.UnpinNote();
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task ArchiveNoteAsync(Guid noteId, CancellationToken ct = default)
+    {
+        var note = await _db.Notes.FirstOrDefaultAsync(n => n.Id == noteId && n.DeletedAt == null, ct)
+           ?? throw new NotFoundException($"Note {noteId} not found");
+
+        note.ArchiveNote();
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task UnarchiveNoteAsync(Guid noteId, CancellationToken ct = default)
+    {
+        var note = await _db.Notes.FirstOrDefaultAsync(n => n.Id == noteId && n.DeletedAt == null, ct)
+          ?? throw new NotFoundException($"Note {noteId} not found");
+
+        note.UnarchiveNote();
         await _db.SaveChangesAsync(ct);
     }
 }

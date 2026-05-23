@@ -1,3 +1,4 @@
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using Service.Dtos.Notes;
 using Service.Ports;
@@ -19,11 +20,11 @@ public class NoteController : ControllerBase
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] bool? pinned = null,
+        [FromQuery] NoteQuery query = null,
         CancellationToken ct = default
     )
     {
-        var result = await _noteService.GetAllAsync(page, pageSize, pinned, ct);
+        var result = await _noteService.GetAllAsync(page, pageSize, query, ct);
 
         return Ok(result);
     }
@@ -85,6 +86,22 @@ public class NoteController : ControllerBase
     public async Task<IActionResult> UnpinNote(Guid noteId, CancellationToken ct)
     {
         await _noteService.UnpinNote(noteId, ct);
+
+        return NoContent();
+    }
+
+    [HttpPut("{noteId:guid}/archive")]
+    public async Task<IActionResult> ArchiveNote(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.ArchiveNote(noteId, ct);
+
+        return NoContent();
+    }
+
+    [HttpPut("{noteId:guid}/unarchive")]
+    public async Task<IActionResult> Unarchive(Guid noteId, CancellationToken ct)
+    {
+        await _noteService.UnarchiveNote(noteId, ct);
 
         return NoContent();
     }
