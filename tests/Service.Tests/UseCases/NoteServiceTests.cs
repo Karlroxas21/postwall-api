@@ -194,6 +194,43 @@ public class NoteServiceTests
         _repo.Verify(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false), default), Times.Once);
     }
 
+    [Fact]
+    public async Task GetAllAsync_ArchivedTrue_PassesFilterToRepoAndReturnsOnlyArchived()
+    {
+        var notes = new List<Note>
+        {
+            Note.Create("archived-1", "x", "#111", true, isArchived: true, null, null),
+            Note.Create("archived-2", "y", "#222", true, isArchived: true, null, null),
+        };
+        var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 2);
+
+        _repo.Setup(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: true), default)).ReturnsAsync(paged);
+
+        var result = await _sut.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: true), default);
+
+        result.Items.Should().HaveCount(2);
+        result.Items.Should().OnlyContain(i => i.IsArchived);
+        _repo.Verify(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: true), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ArchivedFalse_PassesFilterToRepoAndReturnsOnlyUnarchived()
+    {
+        var notes = new List<Note>
+        {
+            Note.Create("unarchived-1", "x", "#111", false, false, null, null),
+        };
+        var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 1);
+
+        _repo.Setup(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: false), default)).ReturnsAsync(paged);
+
+        var result = await _sut.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: false), default);
+
+        result.Items.Should().HaveCount(1);
+        result.Items.Should().OnlyContain(i => !i.IsArchived);
+        _repo.Verify(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false, Archived: false), default), Times.Once);
+    }
+
     // ---------- UpdateAsync ----------
 
     [Fact]
@@ -283,5 +320,27 @@ public class NoteServiceTests
         await _sut.UnpinNote(noteId, default);
 
         _repo.Verify(r => r.UnpinNoteAsync(noteId, default), Times.Once);
+    }
+
+    // ---------- Archive Note / Unarchive Note ----------
+
+    [Fact]
+    public async Task ArchiveNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.ArchiveNote(noteId, default);
+
+        _repo.Verify(r => r.ArchiveNoteAsync(noteId, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UnarchiveNote_DelegatesToRepo()
+    {
+        var noteId = Guid.NewGuid();
+
+        await _sut.UnarchiveNote(noteId, default);
+
+        _repo.Verify(r => r.UnarchiveNoteAsync(noteId, default), Times.Once);
     }
 }
