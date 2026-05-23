@@ -167,13 +167,13 @@ public class NoteServiceTests
         };
         var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 2);
 
-        _repo.Setup(r => r.GetAllAsync(1, 10, true, default)).ReturnsAsync(paged);
+        _repo.Setup(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: true), default)).ReturnsAsync(paged);
 
-        var result = await _sut.GetAllAsync(1, 10, true, default);
+        var result = await _sut.GetAllAsync(1, 10, new NoteQuery(Pinned: true), default);
 
         result.Items.Should().HaveCount(2);
         result.Items.Should().OnlyContain(i => i.IsPinned);
-        _repo.Verify(r => r.GetAllAsync(1, 10, true, default), Times.Once);
+        _repo.Verify(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: true), default), Times.Once);
     }
 
     [Fact]
@@ -185,13 +185,13 @@ public class NoteServiceTests
         };
         var paged = new PagedResult<Note>(notes, page: 1, pageSize: 10, totalCount: 1);
 
-        _repo.Setup(r => r.GetAllAsync(1, 10, false, default)).ReturnsAsync(paged);
+        _repo.Setup(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false), default)).ReturnsAsync(paged);
 
-        var result = await _sut.GetAllAsync(1, 10, false, default);
+        var result = await _sut.GetAllAsync(1, 10, new NoteQuery(Pinned: false), default);
 
         result.Items.Should().HaveCount(1);
         result.Items.Should().OnlyContain(i => !i.IsPinned);
-        _repo.Verify(r => r.GetAllAsync(1, 10, false, default), Times.Once);
+        _repo.Verify(r => r.GetAllAsync(1, 10, new NoteQuery(Pinned: false), default), Times.Once);
     }
 
     // ---------- UpdateAsync ----------
