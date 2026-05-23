@@ -118,7 +118,7 @@ public class NoteService : INoteService
 
     public async Task UnarchiveNote(Guid noteId, CancellationToken ct)
     {
-         await _noteRepository.UnarchiveNoteAsync(noteId, ct);
+        await _noteRepository.UnarchiveNoteAsync(noteId, ct);
     }
     private static NoteResponse ToNoteResponse(Note note)
     {
