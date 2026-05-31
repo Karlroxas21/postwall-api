@@ -2,6 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Ports;
 using Domain.ValueObjects;
+using Domain.ValueObjects.NoteFilters;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
@@ -43,8 +44,37 @@ public class NoteRepository : INoteRepository
             query = query.Where(n => !n.IsArchived || n.IsPinned);
         }
 
+        if (q.TagId.HasValue)
+        {
+            query = query.Where(n => n.NoteTags.Any(nt => nt.TagId == q.TagId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(q.Search))
+        {
+            var term = q.Search.Trim();
+            query = query.Where(n => n.Title.Contains(term) || n.Content.Contains(term));
+        }
+
+        if (q.Color.HasValue && NoteColorHex.ToHex.TryGetValue(q.Color.Value, out var hex))
+        {
+            query = query.Where(n => n.Color == hex);
+        }
+
+        if (q.Due.HasValue)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            query = q.Due.Value switch
+            {
+                Due.today => query.Where(n => n.DueDate == today),
+                Due.overdue => query.Where(n => n.DueDate != null && n.DueDate < today),
+                _ => query
+            };
+        }
+
+        query = ApplySort(query, q.Sort, q.Order);
+
         var Total = await query.CountAsync(ct);
-        var Items = await query.OrderByDescending(n => n.CreatedAt)
+        var Items = await query
             .Skip((Page - 1) * PageSize)
             .Take(PageSize)
             .Include(n => n.NoteTags)
@@ -152,5 +182,18 @@ public class NoteRepository : INoteRepository
 
         note.UnarchiveNote();
         await _db.SaveChangesAsync(ct);
+    }
+
+    private static IQueryable<Note> ApplySort(IQueryable<Note> query, Sort? sort, Order? order)
+    {
+        var desc = (order ?? Order.desc) == Order.desc;
+
+        return (sort ?? Sort.created) switch
+        {
+            Sort.updated => desc ? query.OrderByDescending(n => n.UpdatedAt) : query.OrderBy(n => n.UpdatedAt),
+            Sort.dueDate => desc ? query.OrderByDescending(n => n.DueDate) : query.OrderBy(n => n.DueDate),
+            Sort.title => desc ? query.OrderByDescending(n => n.Title) : query.OrderBy(n => n.Title),
+            _ => desc ? query.OrderByDescending(n => n.CreatedAt) : query.OrderBy(n => n.CreatedAt),
+        };
     }
 }

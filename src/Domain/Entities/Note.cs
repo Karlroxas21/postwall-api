@@ -29,6 +29,7 @@ public class Note : Base
         Note.IsArchived = isArchived;
         Note.DueDate = dueDate;
         Note.FolderId = folderId;
+        Note.CreatedAt = DateTime.UtcNow;
 
         return Note;
     }
