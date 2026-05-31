@@ -2,6 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Ports;
 using Domain.ValueObjects;
+using Domain.ValueObjects.NoteFilters;
 using Service.Dtos.Notes;
 using Service.Ports;
 
